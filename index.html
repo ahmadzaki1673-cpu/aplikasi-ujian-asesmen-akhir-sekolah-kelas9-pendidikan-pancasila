@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASESMEN AKHIR SEKOLAH PENDIDIKAN PANCASILA</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel untuk JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Mencegah seleksi teks (copy-paste) pada area soal */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // ==========================================
+        // 1. PENGATURAN APLIKASI & DATA SOAL
+        // ==========================================
+        const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWGSSWJykTPUPrBbqiyreohRLQ7FQEDRJz6sQW5agoAKVn_Sw1BskO9dEf_2V9u9ay/exec"; // GANTI URL INI NANTI
+        const EXAM_DURATION = 90 * 60; // 90 Menit dalam detik
+        
+        // Data Soal diekstrak dari PDF
+        const questionsData = [
+            { type: 'mc', q: "Panitia Sembilan berhasil merumuskan sebuah dokumen pada tanggal 22 juni 1945.\nDokumen tersebut dikenal dengan nama...", options: ["Teks Proklamasi", "Piagam Jakarta", "Teks sumpah Pemuda", "Batang Tubuh UUD 1945"], ans: 1 },
+            { type: 'mc', q: "Sikap Positif yang sesuai dengan sila keempat Pancasila di lingkungan sekolah adalah...", options: ["Tidak semena-mena terhadap teman", "Tertib sesuai aturan sekolah", "Menghargai harkat dan martabat sebagai seorang teman", "Membantu teman yang kesulitan"], ans: 0 },
+            { type: 'mc', q: "Perhatikan tabel di bawah ini !\n1. Setiap orang percaya kepada Tuhan Yang Maha Esa.\n2. Setiap orang bergaya hidup disiplin dan mampu memanfaatkan ilmu.\n3. Setiap orang mengaktualisasikan rasa kepedulian untuk menolong sesama.\n4. Masing-masing mengambil apa yang bukan menjadi haknya\n\nPernyataan di atas yang merupakan penerapan sila kedua Pancasila ditunjukkan pada nomor.....", options: ["1", "2", "3", "4"], ans: 2 },
+            { type: 'mc', q: "Salah satu sikap yang harus ditunjukkan terhadap suasana kebatinan penyusunan UUD NRI Tahun 1945 adalah...", options: ["Mengenang jasa para pahlawan", "Menjaga tegaknya pemerintahan", "Mematuhi hukum yang berlaku", "Mengamati berbagai kegiatan politik"], ans: 0 },
+            { type: 'mc', q: "Norma yang memiliki ciri-ciri aturan baku yang tidak bisa diubah oleh siapapun, memiliki sanksi yang tidak bisa dikenakan secara langsung kepada pelanggar, serta aturannya mampu mengikuti perkembangan zaman untuk mengatur kehidupan masyarakat. Hal tersebut merupakan ciri dari norma...", options: ["Agama", "Kesopanan", "Kesusilaan", "Hukum"], ans: 0 },
+            { type: 'mc', q: "Urang Banjar mengenal istilah badamai dalam memutuskan perselisihan yang terjadi dalam konflik di masyarakat yang lazim disebut baangkat dangsanak (dipersaudarakan). Nilai apa yang dijunjung tinggi dalam pelaksanaan hukum adat bedamai?", options: ["Perasiangan dan Kemenangan", "Penuntun keadilan formal", "Individualisme dan kebebasan mutlak", "Kekeluargaan, Musyawarah mufakat dan mengembalikan kerukunan"], ans: 3 },
+            { type: 'mc', q: "Terdapat seorang murid kelas VII, setiap pagi berangkat ke sekolah menggunakan sepeda motor pemberian ayahnya. Saat pulang, ia ditilang polisi karena belum memiliki SIM dan usianya masih 13 tahun. Tindakan murid tersebut merupakan bentuk pelanggaran terhadap norma...", options: ["Agama", "Kesusilaan", "Kesopanan", "Hukum"], ans: 3 },
+            { type: 'mc', q: "Seorang anak yang memahami berlakunya norma kesopanan, ketika berjalan melewati kerumunan orang tua yang sedang berbincang, tindakan yang akan ditampilkan adalah..", options: ["Berjalan dengan cepat agar dirinya tidak ditegur", "Membungkukkan punggung, berjalan pelan, dan mengucapkan \"permisi\"", "Membungkukkan punggung, berjalan cepat, dan ikut serta berbicara", "Putar balik dan memilih jalan lain yang tidak ada kerumunan orang tua"], ans: 1 },
+            { type: 'mc', q: "Perhatikan pernyataan berikut:\n1) Semua warga negara memiliki hak dan kewajiban yang sama.\n2) Pemerintah wajib menjunjung tinggi nilai-nilai kemanusiaan.\n3) Negara hanya berpihak kepada kelompok tertentu.\nDari pernyataan di atas, yang sesuai dengan nilai Pancasila sebagai dasar negara adalah...", options: ["1 dan 2", "2 dan 3", "1 dan 3", "3 saja"], ans: 0 },
+            { type: 'mc', q: "Rani melihat temannya diejek karena berbeda agama. Sebagai pelajar yang mengamalkan nilai Pancasila, sikap yang seharusnya dilakukan Rani adalah...", options: ["Membiarkan karena bukan urusannya", "Ikut tertawa agar tidak dijauhi teman-teman", "Menegur teman yang mengejek dan mengingatkan pentingnya saling menghormati", "Melaporkan ke guru tanpa menjelaskan kejadian sebenarnya"], ans: 2 },
+            { type: 'mc', q: "Dari berbagai peranan Pancasila dalam kehidupan berbangsa, dapat disimpulkan bahwa fungsi utama Pancasila adalah...", options: ["Sebagai alat politik untuk mencapai tujuan kelompok tertentu", "Sebagai sumber hukum tertinggi dan pedoman hidup bangsa Indonesia", "Sebagai lambang identitas bangsa di dunia internasional", "Sebagai dasar pembentukan partai politik di Indonesia"], ans: 1 },
+            { type: 'mc', q: "Perhatikan pernyataan berikut:\n1) UUD 1945 merupakan hukum dasar tertulis yang menjadi pedoman tertinggi.\n2) UUD 1945 hanya digunakan dalam kegiatan pemerintahan pusat.\n3) UUD 1945 berisi pokok-pokok aturan penyelenggaraan negara.\n4) UUD 1945 bersifat sementara dan dapat diganti kapan saja.\nPernyataan yang menunjukkan makna UUD 1945 adalah...", options: ["1 dan 3", "2 dan 4", "1 dan 2", "3 dan 4"], ans: 0 },
+            { type: 'mc', q: "UUD NRI Tahun 1945 memuat norma yang harus ditaati dan menjadi acuan. Di dalamnya diatur pembagian kekuasaan, jaminan HAM, dan kewajiban warga negara. Semua peraturan di bawahnya tidak boleh bertentangan.\nBerdasarkan teks di atas, fungsi utama UUD NRI Tahun 1945 bagi penyelenggaraan negara dapat disimpulkan sebagai...", options: ["Sebagai pedoman tunggal bagi lembaga eksekutif dalam menjalankan program pembangunan.", "Sebagai alat kontrol norma hukum yang lebih rendah serta sebagai dasar pengaturan kehidupan bernegara.", "Sebagai satu-satunya sumber keuangan negara dan mengatur tata cara pemungutan pajak.", "Sebagai dokumen politik yang hanya memuat cita-cita bangsa tanpa kekuatan hukum."], ans: 1 },
+            { type: 'mc', q: "Urutan yang paling sesuai dengan tata urutan peraturan perundang-undangan nasional Indonesia adalah...\n1. UUD NRI Tahun 1945\n2. Ketetapan MPR\n3. UU / Perppu\n4. Peraturan Pemerintah\n5. Peraturan Daerah\n6. Peraturan Presiden", options: ["1, 2, 3, 4, 6, 5 (UUD, MPR, UU, PP, Perpres, Perda)", "1, 3, 2, 4, 5, 6", "2, 1, 3, 4, 5, 6", "1, 2, 4, 3, 5, 6"], ans: 0 }, // Disesuaikan opsi agar logis (Perpres no 6, Perda Prov, Perda Kab) -> Opsi A diubah menyesuaikan tata urutan UU No 12 2011
+            { type: 'mc', q: "Kesimpulan yang paling tepat mengenai kedudukan UUD NRI Tahun 1945 dalam sistem hukum nasional di Indonesia adalah...", options: ["Berfungsi sebagai pedoman operasional harian bagi lembaga eksekutif, setara PP.", "Merupakan peraturan tertinggi yang bersifat mengikat dan menjadi sumber hukum utama bagi semua peraturan di bawahnya.", "Kedudukan peraturan yang dapat diubah oleh UU dan Perpres jika mendesak.", "Hanya mengatur pembagian kekuasaan lembaga negara."], ans: 1 },
+            { type: 'mc', image: "https://via.placeholder.com/600x400?text=Gambar+Tokoh+Budi+Utomo", q: "Beliau adalah salah satu tokoh sentral dalam pendirian organisasi Budi Utomo yang menjadi pelopor kebangkitan nasional. Siapakah tokoh yang dimaksud?", options: ["Ki Hajar Dewantara", "Dr. Wahidin Sudirohusodo", "Raden Ajeng Kartini", "Soetomo"], ans: 3 },
+            { type: 'mc', image: "https://via.placeholder.com/600x400?text=Gambar+Rapat+DPR+RI", q: "Analisislah gambar jika dikaitkan dengan nilai kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan...", options: ["Gambar tersebut menggambarkan anggota DPR sedang rapat, dipilih demokratis, bermusyawarah mengambil keputusan atas nama rakyat.", "Gambar tersebut menggambarkan anggota DPR sedang rapat, dengan berbagai suku yang berbeda.", "Gambar tersebut rapat DPR tanpa mendengar aspirasi dari Rakyat.", "Gambar tersebut rapat DPR yang keputusannya tidak bisa diganggu gugat."], ans: 0 },
+            { type: 'mc', image: "https://via.placeholder.com/600x400?text=Infografik+Sebaran+Penduduk", q: "Jumlah Pulau dengan jumlah penduduk terpadat adalah...", options: ["Sumatera", "Kalimantan", "Jawa", "Sulawesi"], ans: 2 },
+            { type: 'mc', q: "Akibat dari kondisi pada infografik (kepadatan di Pulau Jawa) adalah...", options: ["Pulau Jawa menjadi tujuan tranmigrasi", "Kalimantan menjadi wilayah tidak berpenghuni", "Kurangnya tenaga kerja dipulau berpenduduk kecil", "Tingginya angka pengangguran di wilayah padat penduduk"], ans: 3 },
+            { type: 'mc', q: "Kondisi yang mungkin terjadi di wilayah Papua (penduduk 8,6 juta) adalah...", options: ["Tingginya pengangguran", "Kurangnya tenaga kerja", "Munculnya permukiman liar", "Meningkatnya kriminalitas"], ans: 1 },
+            { type: 'mc', q: "Salah satu alasan mengapa Pancasila yang diusulkan oleh Soekarno akhirnya diterima sebagai dasar negara adalah karena...", options: ["Pancasila mencerminkan semangat persatuan tanpa memihak pada kelompok agama atau golongan tertentu.", "Pancasila diambil seluruhnya dari Piagam Jakarta tanpa perubahan sedikit pun.", "Pancasila hanya menekankan nilai-nilai ketuhanan tanpa memperhatikan kemanusiaan.", "Pancasila merupakan hasil keputusan tunggal Soekarno tanpa perdebatan."], ans: 0 },
+            { type: 'mc', q: "Dalam kehidupan bermasyarakat terdapat berbagai jenis norma. Salah satu contohnya adalah ketika seseorang dikenakan sanksi hukum karena melanggar peraturan lalu lintas. Jenis norma yang berlaku adalah....", options: ["Norma Kesopanan", "Norma Agama", "Norma Hukum", "Norma Kebiasaan"], ans: 2 },
+            { type: 'mc', q: "Untuk menjaga persatuan bangsa sesuai semboyan Bhinneka Tunggal Ika, sikap yang paling tepat yang harus dilakukan dalam menghadapi perbedaan suku adalah...", options: ["Mengutamakan kepentingan suku sendiri", "Menganggap budaya suku lain lebih rendah", "Menghormati perbedaan dan bekerja sama dalam keberagaman", "Menghindari interaksi dengan suku lain"], ans: 2 },
+            { type: 'mc', q: "Manakah pernyataan berikut yang paling tepat menggambarkan dampak positif dan negatif dari desentralisasi terhadap persatuan NKRI?", options: ["Desentralisasi selalu memperkuat persatuan.", "Desentralisasi selalu mengancam persatuan karena memicu separatis.", "Desentralisasi memperkuat persatuan jika dikelola baik, namun bisa memicu konflik jika pengawasan lemah dan kesenjangan meningkat.", "Desentralisasi tidak berpengaruh signifikan terhadap persatuan."], ans: 2 },
+            { type: 'mc', q: "Sebagai seorang pelajar yang memahami nilai persatuan, bagaimana kamu menilai keputusan perubahan rumusan sila pertama dari Piagam Jakarta menjadi 'Ketuhanan Yang Maha Esa'?", options: ["Tidak tepat, karena menghapus nilai agama tertentu", "Tepat, karena menunjukkan semangat toleransi dan menghargai perbedaan", "Kurang tepat, karena menurunkan derajat agama tertentu", "Tidak berpengaruh terhadap keutuhan bangsa"], ans: 1 },
+            { type: 'mc', q: "Tentukan urutan Benar (B) atau Salah (S) dari pernyataan berikut:\n1. Sidang pertama BPUPKI menghasilkan pengesahan UUD 1945 secara resmi.\n2. Pembukaan UUD 1945 sebagian besar isinya diambil dari Piagam Jakarta.\n3. Panitia Perancang UUD dibentuk dalam sidang kedua BPUPKI dan diketuai oleh Ir. Soekarno.\n4. Soepomo mengusulkan sistem pemerintahan presidensial dengan konsep integralistik.", options: ["Salah, Benar, Salah, Benar (S-B-S-B)", "Benar, Salah, Benar, Salah (B-S-B-S)", "Benar, Benar, Salah, Salah (B-B-S-S)", "Salah, Salah, Benar, Benar (S-S-B-B)"], ans: 0 },
+            { type: 'mc', q: "Suatu sekolah mengadakan 'Pekan Budaya Daerah'. Sebagian siswa kurang antusias karena menganggap tidak penting. Langkah evaluatif apa yang seharusnya dilakukan panitia?", options: ["Membatalkan kegiatan agar tidak membuang waktu", "Mengubah konsep kegiatan agar lebih menarik bagi siswa, tanpa menghilangkan nilai budaya", "Menambah kegiatan hiburan modern saja", "Memaksa siswa ikut tanpa memperhatikan minat mereka"], ans: 1 },
+            { 
+                type: 'match', 
+                q: "Jodohkan pernyataan perilaku (Kiri) dengan makna sikap bela negara (Kanan) yang tepat!", 
+                left: ["1. Mengikuti kegiatan ronda malam", "2. Menjaga kelestarian lingkungan pantai", "3. Menghargai perbedaan suku, agama", "4. Menggunakan produk dalam negeri", "5. Menolak menyebarkan berita bohong"], 
+                right: ["A. Menolak hoaks (Bela negara moral)", "B. Dukungan terhadap ekonomi nasional", "C. Menjaga keamanan lingkungan", "D. Menjaga aset nasional dan ekosistem", "E. Menjaga kerukunan keberagaman"],
+                ans: { 0: 2, 1: 3, 2: 4, 3: 1, 4: 0 } // 1->C, 2->D, 3->E, 4->B, 5->A
+            },
+            { type: 'mc-multi', q: "PILIHAN GANDA KOMPLEKS (Pilih lebih dari 1 jawaban yang benar)\nSikap penerapan nilai pancasila dan Bhineka Tunggal Ika dalam kehidupan berbangsa dan bernegara ditunjukkan oleh perilaku...", options: ["Membantu bisnis ilegal", "Menjunjung tinggi toleransi", "Melindungi hak - hak kaum minoritas", "Melakukan rasisme terhadap kelompok"], ans: [1, 2] },
+            { type: 'mc', q: "Suatu daerah menetapkan Perda izin khusus air tanpa mempertimbangkan UU Sumber Daya Air. Sebagai Anggota DPRD, langkah konstitusional yang tepat adalah...", options: ["Menyetujui Perda tersebut", "Mengajukan rancangan Perda ke Presiden", "Menolak Perda karena bertentangan dengan peraturan yang lebih tinggi", "Meminta Mahkamah Agung meninjau UU"], ans: 2 },
+            { type: 'mc', q: "Sikap yang paling tepat dalam menghadapi budaya luar akibat perkembangan teknologi adalah...", options: ["Menolak seluruh budaya Luar", "Menggabungkan unsur positif budaya luar tanpa meninggalkan budaya sendiri", "Mengabaikan budaya lokal", "Meniru sepenuhnya budaya luar"], ans: 1 },
+            { type: 'mc', q: "Peran warga negara dalam menjaga keutuhan NKRI terkait konflik perbatasan adalah...", options: ["Menyerahkan sepenuhnya kepada pemerintah pusat", "Membentuk kelompok bersenjata", "Meningkatkan kesadaran hukum dan semangat nasionalisme di masyarakat", "Menghindari keterlibatan kegiatan sosial di perbatasan"], ans: 2 },
+            { type: 'mc', q: "Faktor yang paling berpengaruh dalam proses penyusunan Pancasila sebagai dasar negara Indonesia adalah.....", options: ["Usulan Soekarno diterima bulat karena tidak ada yang lain", "Dipengaruhi berbagai faktor termasuk usulan berbagai tokoh, diskusi dan kompromi untuk mufakat", "Merupakan hasil salinan konstitusi negara lain", "Hanya melibatkan beberapa tokoh tanpa aspirasi rakyat"], ans: 1 },
+            { type: 'mc', q: "Yoberto (Hindu Dayak), Helena (Kristen Dayak), Hayati (Islam Banjar) bersahabat. Kadang bertengkar, tapi bisa menyelesaikan dengan baik sehingga makin dekat. Kesimpulan dari wacana tersebut adalah.....", options: ["Setiap orang memiliki karakter baik dan kurang baik", "Perbedaan suku dianggap wajar", "Memahami karakter teman adalah terpuji", "Mengelola konflik dengan baik dalam pertemanan dapat mempererat persahabatan"], ans: 3 },
+            { type: 'mc', q: "Pemerintah mengeluarkan aturan standar keselamatan kerja. Yoberto menolak mematuhi karena memakan biaya. Ia akhirnya disidak dan diberi sanksi. Hal ini menunjukkan hukum berfungsi sebagai......", options: ["Fungsi menciptakan hukum", "Fungsi kepastian hukum", "Fungsi kemudahan", "Fungsi stabilisasi (menjaga ketertiban & menindak pelanggar)"], ans: 3 },
+            { type: 'mc', q: "Survei pengamalan Pancasila: Ibadah(54), Nolong teman(23), Piket(50), Rela berkorban(45), Musyawarah(51), Terima hasil(50), Menabung(44), Jujur(27). Berdasarkan tabel dapat disimpulkan bahwa...", options: ["Sila ke-3 sama dengan sila ke-2", "Sila ke-4 lebih sedikit dari sila ke-2", "Peserta didik yg mengamalkan nilai sila pertama (Ibadah=54) lebih banyak dari pada pengamalan nilai sila kelima (Menabung=44)", "Sila ketiga sama dengan sila kedua"], ans: 2 },
+            { type: 'mc', q: "Saat 'Jum'at Bersih', Ardi menyapu dan menolong teman membawa air. Roni hanya main HP. Perilaku yang sesuai nilai Pancasila adalah...", options: ["Ardi bekerja sama dan menolong teman dengan sukarela", "Roni tidak ikut karena bukan tugasnya", "Ardi menegur Roni dengan marah", "Roni menyuruh teman lain"], ans: 0 },
+            { type: 'mc', q: "Kombinasi pernyataan yang termasuk isi Pembukaan UUD 1945 adalah:\n1) Tujuan nasional bangsa\n2) Bentuk negara federal\n3) Dasar negara Pancasila\n4) Proklamasi kemerdekaan", options: ["(1), (2), (3)", "(1), (3), (4)", "(2), (3), (4)", "(1), (2), (4)"], ans: 1 },
+            { type: 'mc', q: "Sinta menari tarian Betawi, Budi menyanyi lagu Ambon. Teman-teman antusias. Sikap ini mencerminkan....", options: ["Persatuan Indonesia", "Bhinneka Tunggal Ika", "Keadilan sosial", "Ketuhanan Yang Maha Esa"], ans: 1 },
+            { type: 'mc', q: "Cermati pernyataan ciri NKRI:\n1) Kedaulatan di tangan pemerintah pusat\n2) Daerah bebas menjadi negara sendiri\n3) Ada pembagian kewenangan antara pusat dan daerah\n4) Provinsi boleh buat hukum tanpa izin pusat\nPernyataan yang benar:", options: ["(1) dan (3)", "(1) dan (2)", "(2) dan (3)", "(3) dan (4)"], ans: 0 }
+        ];
+
+        // --- TAMBAHAN FITUR ACAK SOAL ---
+        // Fungsi untuk mengacak urutan array (Metode Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // Acak urutan soal di dalam questionsData sesaat sebelum aplikasi React dimuat
+        shuffleArray(questionsData);
+        // --------------------------------
+
+        // ==========================================
+        // 2. KOMPONEN UTAMA REACT
+        // ==========================================
+        const { useState, useEffect, useRef } = React;
+
+        function App() {
+            const [stage, setStage] = useState('login'); // login, exam, result
+            const [student, setStudent] = useState({ name: '', cls: '', date: '' });
+            const [currentQ, setCurrentQ] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [timeLeft, setTimeLeft] = useState(EXAM_DURATION);
+            const [cheatCount, setCheatCount] = useState(0);
+            const [showWarning, setShowWarning] = useState(false);
+            const [score, setScore] = useState(0);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            // Timer Logic
+            useEffect(() => {
+                let timer;
+                if (stage === 'exam' && timeLeft > 0) {
+                    timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+                } else if (timeLeft === 0 && stage === 'exam') {
+                    finishExam("Waktu Habis!");
+                }
+                return () => clearInterval(timer);
+            }, [stage, timeLeft]);
+
+            // Anti-Cheat (Visibility Change)
+            useEffect(() => {
+                const handleVisibilityChange = () => {
+                    if (document.hidden && stage === 'exam') {
+                        setCheatCount(prev => {
+                            const newCount = prev + 1;
+                            if (newCount === 1) {
+                                setShowWarning(true);
+                            } else if (newCount >= 2) {
+                                finishExam("Terdeteksi meninggalkan ujian lebih dari 1 kali. Ujian dihentikan otomatis.");
+                            }
+                            return newCount;
+                        });
+                    }
+                };
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+                return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+            }, [stage]);
+
+            // Format Time
+            const formatTime = (seconds) => {
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = seconds % 60;
+                return `${h > 0 ? h + 'j ' : ''}${m}m ${s}s`;
+            };
+
+            // Calculate Score & Submit
+            const finishExam = async (reason = "") => {
+                setIsSubmitting(true);
+                let correctCount = 0;
+
+                questionsData.forEach((q, idx) => {
+                    const userAns = answers[idx];
+                    if (userAns === undefined) return;
+
+                    if (q.type === 'mc') {
+                        if (userAns === q.ans) correctCount++;
+                    } else if (q.type === 'mc-multi') {
+                        // Check if arrays are exactly the same
+                        const sortedUser = [...userAns].sort();
+                        const sortedAns = [...q.ans].sort();
+                        if (JSON.stringify(sortedUser) === JSON.stringify(sortedAns)) correctCount++;
+                    } else if (q.type === 'match') {
+                        // Check if all mappings are correct
+                        let isCorrect = true;
+                        if (Object.keys(userAns).length !== q.left.length) isCorrect = false;
+                        for (let key in q.ans) {
+                            if (userAns[key] !== q.ans[key]) isCorrect = false;
+                        }
+                        if (isCorrect) correctCount++;
+                    }
+                });
+
+                const finalScore = Math.round((correctCount / questionsData.length) * 100);
+                setScore(finalScore);
+
+                // Kirim data ke Google Sheets
+                try {
+                    const payload = {
+                        nama: student.name,
+                        kelas: student.cls,
+                        tanggal: student.date,
+                        skor: finalScore,
+                        pelanggaran: cheatCount,
+                        alasan_selesai: reason || "Selesai Normal"
+                    };
+
+                    await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (error) {
+                    console.error("Gagal mengirim data:", error);
+                }
+
+                setStage('result');
+                setIsSubmitting(false);
+                if(reason && reason !== "Waktu Habis!") alert(reason);
+            };
+
+            // Answer Handlers
+            const handleAnswerMC = (qIdx, optIdx) => {
+                setAnswers(prev => ({ ...prev, [qIdx]: optIdx }));
+            };
+
+            const handleAnswerMulti = (qIdx, optIdx) => {
+                setAnswers(prev => {
+                    const current = prev[qIdx] || [];
+                    if (current.includes(optIdx)) {
+                        return { ...prev, [qIdx]: current.filter(x => x !== optIdx) };
+                    } else {
+                        return { ...prev, [qIdx]: [...current, optIdx] };
+                    }
+                });
+            };
+
+            const handleAnswerMatch = (qIdx, leftIdx, rightIdx) => {
+                setAnswers(prev => {
+                    const current = prev[qIdx] || {};
+                    return { ...prev, [qIdx]: { ...current, [leftIdx]: parseInt(rightIdx) } };
+                });
+            };
+
+            // Check if question is answered (for grid)
+            const isAnswered = (idx) => {
+                const ans = answers[idx];
+                if (ans === undefined) return false;
+                const type = questionsData[idx].type;
+                if (type === 'mc-multi') return ans.length > 0;
+                if (type === 'match') return Object.keys(ans).length === questionsData[idx].left.length;
+                return true; // MC
+            };
+
+            // ================= RENDER LOGIN =================
+            if (stage === 'login') {
+                return (
+                    <div className="flex items-center justify-center min-h-screen p-4">
+                        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border-t-4 border-blue-600">
+                            <div className="text-center mb-6">
+                                <h1 className="text-2xl font-bold text-gray-800">CBT SEKOLAH</h1>
+                                <h2 className="text-sm font-semibold text-blue-600 mt-1">ASESMEN AKHIR SEKOLAH</h2>
+                                <p className="text-xs text-gray-500">Pendidikan Pancasila - Kelas IX</p>
+                            </div>
+                            <form onSubmit={(e) => { e.preventDefault(); setStage('exam'); }} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                                    <input required type="text" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.name} onChange={e => setStudent({...student, name: e.target.value})} placeholder="Masukkan nama..." />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Kelas</label>
+                                    <select required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.cls} onChange={e => setStudent({...student, cls: e.target.value})}>
+                                        <option value="">Pilih Kelas</option>
+                                        <option value="IX-A">IX</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Tanggal Ujian</label>
+                                    <input required type="date" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.date} onChange={e => setStudent({...student, date: e.target.value})} />
+                                </div>
+                                <div className="pt-4">
+                                    <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Mulai Ujian
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ================= RENDER RESULT =================
+            if (stage === 'result') {
+                return (
+                    <div className="flex items-center justify-center min-h-screen p-4">
+                        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center border-t-4 border-green-500">
+                            <h1 className="text-3xl font-bold text-gray-800 mb-2">Ujian Selesai</h1>
+                            <p className="text-gray-600 mb-6">Terima kasih telah mengikuti ujian, {student.name}.</p>
+                            
+                            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                                <p className="text-sm text-gray-500 uppercase tracking-wide">Nilai Anda</p>
+                                <p className="text-5xl font-extrabold text-blue-600 my-2">{score}</p>
+                            </div>
+
+                            {cheatCount > 0 && (
+                                <p className="text-sm text-red-500 mb-4 bg-red-50 p-2 rounded">Catatan: Terdeteksi {cheatCount} kali meninggalkan halaman ujian.</p>
+                            )}
+
+                            <p className="text-sm text-gray-400">Jawaban Anda telah berhasil dikirim ke server.</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ================= RENDER EXAM =================
+            const q = questionsData[currentQ];
+
+            return (
+                <div className="flex flex-col md:flex-row min-h-screen no-select">
+                    {/* Pop-up Peringatan Cheat */}
+                    {showWarning && (
+                        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+                            <div className="bg-white p-6 rounded-lg max-w-sm text-center">
+                                <div className="text-red-600 text-5xl mb-4">⚠️</div>
+                                <h3 className="text-xl font-bold mb-2 text-gray-800">PERINGATAN!</h3>
+                                <p className="mb-4 text-gray-600">Anda terdeteksi meninggalkan halaman ujian atau membuka tab lain. Jika ini terjadi lagi, ujian akan otomatis dihentikan!</p>
+                                <button onClick={() => setShowWarning(false)} className="bg-red-600 text-white px-4 py-2 rounded font-semibold hover:bg-red-700">Saya Mengerti</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Left Area: Question Display */}
+                    <div className="flex-1 p-4 md:p-8 flex flex-col h-screen overflow-y-auto">
+                        {/* Header Info */}
+                        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm mb-6 border-b-4 border-blue-500">
+                            <div>
+                                <h2 className="font-bold text-gray-800 hidden md:block">Pendidikan Pancasila - Kelas IX</h2>
+                                <p className="text-sm text-gray-500">{student.name} | {student.cls}</p>
+                            </div>
+                            <div className={`font-mono text-xl font-bold px-4 py-2 rounded-lg ${timeLeft < 300 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-800'}`}>
+                                ⏱ {formatTime(timeLeft)}
+                            </div>
+                        </div>
+
+                        {/* Question Box */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm flex-1 mb-6">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4 whitespace-pre-line">
+                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mr-2 align-middle">Soal {currentQ + 1}</span>
+                                <br className="md:hidden"/>
+                                {q.q}
+                            </h3>
+
+                            {/* Area untuk menampilkan Gambar jika ada */}
+                            {q.image && (
+                                <div className="mb-4 flex justify-center">
+                                    <img src={q.image} alt="Gambar Soal" className="max-w-full max-h-80 object-contain rounded-lg border border-gray-200 shadow-sm" />
+                                </div>
+                            )}
+
+                            {/* Render Options Based on Type */}
+                            <div className="space-y-3 mt-6">
+                                {/* Tipe 1: Pilihan Ganda Biasa */}
+                                {q.type === 'mc' && q.options.map((opt, idx) => (
+                                    <label key={idx} className={`flex items-start p-3 border rounded-lg cursor-pointer transition-colors ${answers[currentQ] === idx ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-50 border-gray-200'}`}>
+                                        <input type="radio" name={`q-${currentQ}`} className="mt-1 mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500" 
+                                            checked={answers[currentQ] === idx}
+                                            onChange={() => handleAnswerMC(currentQ, idx)}
+                                        />
+                                        <span className="text-gray-700">{opt}</span>
+                                    </label>
+                                ))}
+
+                                {/* Tipe 2: Pilihan Ganda Kompleks (Bisa pilih lebih dari 1) */}
+                                {q.type === 'mc-multi' && q.options.map((opt, idx) => (
+                                    <label key={idx} className={`flex items-start p-3 border rounded-lg cursor-pointer transition-colors ${(answers[currentQ] || []).includes(idx) ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-50 border-gray-200'}`}>
+                                        <input type="checkbox" className="mt-1 mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded" 
+                                            checked={(answers[currentQ] || []).includes(idx)}
+                                            onChange={() => handleAnswerMulti(currentQ, idx)}
+                                        />
+                                        <span className="text-gray-700">{opt}</span>
+                                    </label>
+                                ))}
+
+                                {/* Tipe 3: Menjodohkan */}
+                                {q.type === 'match' && (
+                                    <div className="grid gap-4 mt-4">
+                                        <div className="text-sm font-semibold text-gray-600 bg-gray-100 p-2 rounded">Pasangkan pernyataan di bawah ini dengan pilihan yang tepat:</div>
+                                        {q.left.map((l_text, l_idx) => (
+                                            <div key={l_idx} className="flex flex-col md:flex-row md:items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                                <div className="w-full md:w-1/2 pr-2 mb-2 md:mb-0 text-sm text-gray-800">{l_text}</div>
+                                                <div className="w-full md:w-1/2">
+                                                    <select 
+                                                        className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                                        value={(answers[currentQ] || {})[l_idx] ?? ""}
+                                                        onChange={(e) => handleAnswerMatch(currentQ, l_idx, e.target.value)}
+                                                    >
+                                                        <option value="" disabled>-- Pilih Pasangan --</option>
+                                                        {q.right.map((r_text, r_idx) => (
+                                                            <option key={r_idx} value={r_idx}>{r_text}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Bottom Navigation */}
+                        <div className="flex justify-between items-center mt-auto">
+                            <button 
+                                onClick={() => setCurrentQ(prev => Math.max(0, prev - 1))}
+                                disabled={currentQ === 0}
+                                className={`px-6 py-2 rounded-md font-medium ${currentQ === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-600 text-white hover:bg-gray-700'}`}
+                            >
+                                ← Sebelumnya
+                            </button>
+                            
+                            {currentQ === questionsData.length - 1 ? (
+                                <button 
+                                    onClick={() => {
+                                        if(confirm("Apakah Anda yakin ingin menyelesaikan ujian sekarang?")) finishExam();
+                                    }}
+                                    disabled={isSubmitting}
+                                    className="px-6 py-2 rounded-md font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                >
+                                    {isSubmitting ? 'Mengirim...' : 'Selesai & Kumpul ✓'}
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={() => setCurrentQ(prev => Math.min(questionsData.length - 1, prev + 1))}
+                                    className="px-6 py-2 rounded-md font-medium bg-blue-600 text-white hover:bg-blue-700"
+                                >
+                                    Selanjutnya →
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Area: Navigation Grid */}
+                    <div className="w-full md:w-72 bg-white border-t md:border-t-0 md:border-l border-gray-200 p-4 flex flex-col h-auto md:h-screen shadow-lg z-10">
+                        <div className="text-center mb-4">
+                            <h3 className="font-bold text-gray-700 border-b pb-2">Navigasi Soal</h3>
+                            <div className="flex justify-center gap-2 mt-2 text-xs">
+                                <span className="flex items-center"><span className="w-3 h-3 bg-green-500 rounded-full mr-1"></span> Dijawab</span>
+                                <span className="flex items-center"><span className="w-3 h-3 bg-gray-200 rounded-full mr-1 border"></span> Belum</span>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-5 gap-2 overflow-y-auto pr-1 pb-4 flex-1 content-start">
+                            {questionsData.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setCurrentQ(idx)}
+                                    className={`
+                                        h-10 w-full rounded font-semibold text-sm flex items-center justify-center transition-all
+                                        ${currentQ === idx ? 'ring-2 ring-blue-600 ring-offset-1 transform scale-110' : ''}
+                                        ${isAnswered(idx) ? 'bg-green-500 text-white shadow' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'}
+                                    `}
+                                >
+                                    {idx + 1}
+                                </button>
+                            ))}
+                        </div>
+                        
+                        <div className="pt-4 mt-auto border-t border-gray-200 text-center">
+                             <p className="text-xs text-gray-400 mb-2">Terjawab: {Object.keys(answers).filter(k => isAnswered(k)).length} / {questionsData.length}</p>
+                             <button 
+                                onClick={() => { if(confirm("Yakin ingin menyelesaikan ujian?")) finishExam(); }}
+                                className="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded hover:bg-red-100 font-semibold text-sm transition-colors"
+                            >
+                                HENTIKAN UJIAN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
