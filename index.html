@@ -33,7 +33,7 @@
         // ==========================================
         // 1. PENGATURAN APLIKASI & DATA SOAL
         // ==========================================
-        const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWGSSWJykTPUPrBbqiyreohRLQ7FQEDRJz6sQW5agoAKVn_Sw1BskO9dEf_2V9u9ay/exec"; // GANTI URL INI
+        const GOOGLE_SHEETS_WEB_APP_URL = "URL_APPS_SCRIPT_ANDA"; // GANTI URL INI
         const EXAM_DURATION = 90 * 60; // 90 Menit dalam detik
         
         // Data Soal
@@ -83,9 +83,9 @@
                 ans: 0 
             },
             { type: 'mc', q: "Kesimpulan yang paling tepat mengenai kedudukan UUD NRI Tahun 1945 dalam sistem hukum nasional di Indonesia adalah...", options: ["Berfungsi sebagai pedoman operasional harian bagi lembaga eksekutif, setara PP.", "Merupakan peraturan tertinggi yang bersifat mengikat dan menjadi sumber hukum utama bagi semua peraturan di bawahnya.", "Kedudukan peraturan yang dapat diubah oleh UU dan Perpres jika mendesak.", "Hanya mengatur pembagian kekuasaan lembaga negara."], ans: 1 },
-            { type: 'mc', image: "soetomo.jpg", q: "Beliau adalah salah satu tokoh sentral dalam pendirian organisasi Budi Utomo yang menjadi pelopor kebangkitan nasional. Siapakah tokoh yang dimaksud?", options: ["Ki Hajar Dewantara", "Dr. Wahidin Sudirohusodo", "Raden Ajeng Kartini", "Soetomo"], ans: 3 },
-            { type: 'mc', image: "ruangmpr.jpg", q: "Analisislah gambar jika dikaitkan dengan nilai kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan...", options: ["Gambar tersebut menggambarkan anggota DPR sedang rapat, dipilih demokratis, bermusyawarah mengambil keputusan atas nama rakyat.", "Gambar tersebut menggambarkan anggota DPR sedang rapat, dengan berbagai suku yang berbeda.", "Gambar tersebut rapat DPR tanpa mendengar aspirasi dari Rakyat.", "Gambar tersebut rapat DPR yang keputusannya tidak bisa diganggu gugat."], ans: 0 },
-            { type: 'mc', image: "datapendudukindonesia.jpg", q: "Jumlah Pulau dengan jumlah penduduk terpadat adalah...", options: ["Sumatera", "Kalimantan", "Jawa", "Sulawesi"], ans: 2 },
+            { type: 'mc', image: "https://via.placeholder.com/600x400?text=Gambar+Tokoh+Budi+Utomo", q: "Beliau adalah salah satu tokoh sentral dalam pendirian organisasi Budi Utomo yang menjadi pelopor kebangkitan nasional. Siapakah tokoh yang dimaksud?", options: ["Ki Hajar Dewantara", "Dr. Wahidin Sudirohusodo", "Raden Ajeng Kartini", "Soetomo"], ans: 3 },
+            { type: 'mc', image: "https://via.placeholder.com/600x400?text=Gambar+Rapat+DPR+RI", q: "Analisislah gambar jika dikaitkan dengan nilai kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan...", options: ["Gambar tersebut menggambarkan anggota DPR sedang rapat, dipilih demokratis, bermusyawarah mengambil keputusan atas nama rakyat.", "Gambar tersebut menggambarkan anggota DPR sedang rapat, dengan berbagai suku yang berbeda.", "Gambar tersebut rapat DPR tanpa mendengar aspirasi dari Rakyat.", "Gambar tersebut rapat DPR yang keputusannya tidak bisa diganggu gugat."], ans: 0 },
+            { type: 'mc', image: "https://via.placeholder.com/600x400?text=Infografik+Sebaran+Penduduk", q: "Jumlah Pulau dengan jumlah penduduk terpadat adalah...", options: ["Sumatera", "Kalimantan", "Jawa", "Sulawesi"], ans: 2 },
             { type: 'mc', q: "Akibat dari kondisi pada infografik (kepadatan di Pulau Jawa) adalah...", options: ["Pulau Jawa menjadi tujuan tranmigrasi", "Kalimantan menjadi wilayah tidak berpenghuni", "Kurangnya tenaga kerja dipulau berpenduduk kecil", "Tingginya angka pengangguran di wilayah padat penduduk"], ans: 3 },
             { type: 'mc', q: "Kondisi yang mungkin terjadi di wilayah Papua (penduduk 8,6 juta) adalah...", options: ["Tingginya pengangguran", "Kurangnya tenaga kerja", "Munculnya permukiman liar", "Meningkatnya kriminalitas"], ans: 1 },
             { type: 'mc', q: "Salah satu alasan mengapa Pancasila yang diusulkan oleh Soekarno akhirnya diterima sebagai dasar negara adalah karena...", options: ["Pancasila mencerminkan semangat persatuan tanpa memihak pada kelompok agama atau golongan tertentu.", "Pancasila diambil seluruhnya dari Piagam Jakarta tanpa perubahan sedikit pun.", "Pancasila hanya menekankan nilai-nilai ketuhanan tanpa memperhatikan kemanusiaan.", "Pancasila merupakan hasil keputusan tunggal Soekarno tanpa perdebatan."], ans: 0 },
@@ -141,7 +141,7 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
-        shuffleArray(questionsData);
+        // Catatan: Fungsi shuffleArray(questionsData) di luar komponen telah dihapus agar urutan tidak berantakan saat halaman dimuat ulang.
 
         // ==========================================
         // 2. KOMPONEN UTAMA REACT
@@ -159,6 +159,41 @@
             const [score, setScore] = useState(0);
             const [isSubmitting, setIsSubmitting] = useState(false);
 
+            // STATE TAMBAHAN UNTUK FITUR LOCAL STORAGE
+            const [examQuestions, setExamQuestions] = useState([]);
+            const [isResuming, setIsResuming] = useState(false);
+
+            // CEK LOCAL STORAGE SAAT APLIKASI DIMUAT
+            useEffect(() => {
+                const savedSession = localStorage.getItem('cbt_session');
+                if (savedSession) {
+                    try {
+                        const parsed = JSON.parse(savedSession);
+                        setStudent(parsed.student);
+                        setExamQuestions(parsed.questions);
+                        setAnswers(parsed.answers);
+                        setTimeLeft(parsed.timeLeft);
+                        setCheatCount(parsed.cheatCount || 0);
+                        setIsResuming(true); // Tandai ada sesi yang belum selesai
+                    } catch (e) {
+                        console.error("Gagal memuat sesi tersimpan", e);
+                    }
+                }
+            }, []);
+
+            // SIMPAN OTOMATIS SETIAP ADA PERUBAHAN JAWABAN/WAKTU
+            useEffect(() => {
+                if (stage === 'exam' && examQuestions.length > 0) {
+                    localStorage.setItem('cbt_session', JSON.stringify({
+                        student,
+                        questions: examQuestions,
+                        answers,
+                        timeLeft,
+                        cheatCount
+                    }));
+                }
+            }, [answers, timeLeft, cheatCount, stage, student, examQuestions]);
+
             // Fungsi Fullscreen
             const enterFullscreen = () => {
                 const elem = document.documentElement;
@@ -173,9 +208,29 @@
 
             // Memulai Ujian (dan Fullscreen)
             const handleStartExam = (e) => {
-                e.preventDefault();
+                if (e) e.preventDefault();
+                
+                if (!isResuming) {
+                    // Jika ujian baru, acak soal dan simpan ke state
+                    const shuffled = [...questionsData];
+                    shuffleArray(shuffled);
+                    setExamQuestions(shuffled);
+                }
+                
                 enterFullscreen();
                 setStage('exam');
+            };
+
+            // Mulai ulang dari awal (Hapus Sesi)
+            const handleRestart = () => {
+                if (confirm("Yakin ingin menghapus sesi sebelumnya dan mengulang dari awal?")) {
+                    localStorage.removeItem('cbt_session');
+                    setIsResuming(false);
+                    setStudent({ name: '', cls: '', date: '' });
+                    setAnswers({});
+                    setTimeLeft(EXAM_DURATION);
+                    setCheatCount(0);
+                }
             };
 
             // Timer Logic
@@ -221,7 +276,7 @@
                 setIsSubmitting(true);
                 let correctCount = 0;
 
-                questionsData.forEach((q, idx) => {
+                examQuestions.forEach((q, idx) => {
                     const userAns = answers[idx];
                     if (userAns === undefined) return;
 
@@ -241,7 +296,7 @@
                     }
                 });
 
-                const finalScore = Math.round((correctCount / questionsData.length) * 100);
+                const finalScore = Math.round((correctCount / examQuestions.length) * 100);
                 setScore(finalScore);
 
                 // Kirim data ke Google Sheets
@@ -270,6 +325,9 @@
                     document.exitFullscreen().catch(err => console.log(err));
                 }
 
+                // Hapus data tersimpan karena ujian telah selesai
+                localStorage.removeItem('cbt_session');
+
                 setStage('result');
                 setIsSubmitting(false);
                 if(reason && reason !== "Waktu Habis!") alert(reason);
@@ -287,9 +345,9 @@
             const isAnswered = (idx) => {
                 const ans = answers[idx];
                 if (ans === undefined) return false;
-                const type = questionsData[idx].type;
+                const type = examQuestions[idx].type;
                 if (type === 'mc-multi') return ans.length > 0;
-                if (type === 'match') return Object.keys(ans).length === questionsData[idx].left.length;
+                if (type === 'match') return Object.keys(ans).length === examQuestions[idx].left.length;
                 return true; 
             };
 
@@ -303,31 +361,49 @@
                                 <h2 className="text-sm font-semibold text-blue-600 mt-1">ASESMEN AKHIR SEKOLAH</h2>
                                 <p className="text-xs text-gray-500">Pendidikan Pancasila - Kelas IX</p>
                             </div>
-                            <form onSubmit={handleStartExam} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                                    <input required type="text" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.name} onChange={e => setStudent({...student, name: e.target.value})} placeholder="Masukkan nama..." />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Kelas</label>
-                                    <select required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.cls} onChange={e => setStudent({...student, cls: e.target.value})}>
-                                        <option value="">Pilih Kelas</option>
-                                        <option value="IX-A">IX-A</option>
-                                        <option value="IX-B">IX-B</option>
-                                        <option value="IX-C">IX-C</option>
-                                        <option value="IX-D">IX-D</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Tanggal Ujian</label>
-                                    <input required type="date" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.date} onChange={e => setStudent({...student, date: e.target.value})} />
-                                </div>
-                                <div className="pt-4">
-                                    <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                        Mulai Ujian (Fullscreen)
+
+                            {isResuming ? (
+                                <div className="space-y-4 text-center">
+                                    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                                        <p className="text-sm text-yellow-800 font-semibold mb-2">Sesi Ujian Tersimpan Ditemukan!</p>
+                                        <p className="text-gray-700">Nama: <span className="font-bold">{student.name}</span></p>
+                                        <p className="text-gray-700">Sisa Waktu: <span className="font-bold">{formatTime(timeLeft)}</span></p>
+                                        <p className="text-gray-700">Terjawab: <span className="font-bold">{Object.keys(answers).length} soal</span></p>
+                                    </div>
+                                    <button onClick={handleStartExam} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Lanjutkan Ujian (Fullscreen)
+                                    </button>
+                                    <button onClick={handleRestart} className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Mulai Ulang dari Awal
                                     </button>
                                 </div>
-                            </form>
+                            ) : (
+                                <form onSubmit={handleStartExam} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                                        <input required type="text" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.name} onChange={e => setStudent({...student, name: e.target.value})} placeholder="Masukkan nama..." />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Kelas</label>
+                                        <select required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.cls} onChange={e => setStudent({...student, cls: e.target.value})}>
+                                            <option value="">Pilih Kelas</option>
+                                            <option value="IX-A">IX-A</option>
+                                            <option value="IX-B">IX-B</option>
+                                            <option value="IX-C">IX-C</option>
+                                            <option value="IX-D">IX-D</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Tanggal Ujian</label>
+                                        <input required type="date" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={student.date} onChange={e => setStudent({...student, date: e.target.value})} />
+                                    </div>
+                                    <div className="pt-4">
+                                        <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            Mulai Ujian (Fullscreen)
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
                         </div>
                     </div>
                 );
@@ -352,7 +428,7 @@
             }
 
             // ================= RENDER EXAM =================
-            const q = questionsData[currentQ];
+            const q = examQuestions[currentQ];
 
             return (
                 <div className="flex flex-col md:flex-row min-h-screen no-select bg-gray-100 w-full h-full">
@@ -457,12 +533,12 @@
                         {/* Bottom Navigation */}
                         <div className="flex justify-between items-center mt-auto">
                             <button onClick={() => setCurrentQ(prev => Math.max(0, prev - 1))} disabled={currentQ === 0} className={`px-6 py-2 rounded-md font-medium ${currentQ === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-600 text-white hover:bg-gray-700'}`}>← Sebelumnya</button>
-                            {currentQ === questionsData.length - 1 ? (
+                            {currentQ === examQuestions.length - 1 ? (
                                 <button onClick={() => { if(confirm("Apakah Anda yakin ingin menyelesaikan ujian sekarang?")) finishExam(); }} disabled={isSubmitting} className="px-6 py-2 rounded-md font-medium bg-green-600 text-white hover:bg-green-700">
                                     {isSubmitting ? 'Mengirim...' : 'Selesai & Kumpul ✓'}
                                 </button>
                             ) : (
-                                <button onClick={() => setCurrentQ(prev => Math.min(questionsData.length - 1, prev + 1))} className="px-6 py-2 rounded-md font-medium bg-blue-600 text-white hover:bg-blue-700">Selanjutnya →</button>
+                                <button onClick={() => setCurrentQ(prev => Math.min(examQuestions.length - 1, prev + 1))} className="px-6 py-2 rounded-md font-medium bg-blue-600 text-white hover:bg-blue-700">Selanjutnya →</button>
                             )}
                         </div>
                     </div>
@@ -477,14 +553,14 @@
                             </div>
                         </div>
                         <div className="grid grid-cols-5 gap-2 overflow-y-auto pr-1 pb-4 flex-1 content-start">
-                            {questionsData.map((_, idx) => (
+                            {examQuestions.map((_, idx) => (
                                 <button key={idx} onClick={() => setCurrentQ(idx)} className={`h-10 w-full rounded font-semibold text-sm flex items-center justify-center transition-all ${currentQ === idx ? 'ring-2 ring-blue-600 ring-offset-1 transform scale-110' : ''} ${isAnswered(idx) ? 'bg-green-500 text-white shadow' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'}`}>
                                     {idx + 1}
                                 </button>
                             ))}
                         </div>
                         <div className="pt-4 mt-auto border-t border-gray-200 text-center">
-                             <p className="text-xs text-gray-400 mb-2">Terjawab: {Object.keys(answers).filter(k => isAnswered(k)).length} / {questionsData.length}</p>
+                             <p className="text-xs text-gray-400 mb-2">Terjawab: {Object.keys(answers).filter(k => isAnswered(k)).length} / {examQuestions.length}</p>
                              <button onClick={() => { if(confirm("Yakin ingin menyelesaikan ujian?")) finishExam(); }} className="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded hover:bg-red-100 font-semibold text-sm">
                                 HENTIKAN UJIAN
                             </button>
